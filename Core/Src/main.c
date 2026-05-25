@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdlib.h>
+#include <math.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,13 +87,14 @@ static void MX_TIM2_Init(void);
 	//	Trigger Event Selection : Update Event -> st ADC start every time TIM2 counter resets
 
 uint16_t ADC_VAL[2];	//store the multi channel ADC reading, 16bit ADC
+uint16_t absDif;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 
-	//trigger blinky when voltage diffence is bigger than half of Vcc
-	//typecast into uint becasue we want absolte differnce
-	if(	(uint16_t)(ADC_VAL[0]-ADC_VAL[1]) >= 2048)
+	//trigger blinky when voltage diffence is bigger than a quarter of Vcc
+	absDif = abs(ADC_VAL[0]-ADC_VAL[1]);
+	if(	absDif >= 1024)
 	{
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
