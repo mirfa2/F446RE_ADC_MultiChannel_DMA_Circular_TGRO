@@ -92,9 +92,9 @@ uint16_t absDif;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 
-	//trigger blinky when voltage diffence is bigger than a quarter of Vcc
+	//trigger blinky when voltage diffence is bigger than an eight of Vcc
 	absDif = abs(ADC_VAL[0]-ADC_VAL[1]);
-	if(	absDif >= 1024)
+	if(	absDif >= 512)
 	{
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	}
