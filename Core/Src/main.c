@@ -62,6 +62,46 @@ static void MX_TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+	//We can directly control ADC_Sampling_Rate using hardware timer by triggering the ADC at a fixed, precise interval.
+	//We do this by configuring a timer with Triger Output capability to run at the desired sampling rate
+
+	//ADC configurations:
+	//Clock_prescaler setting irrelevant
+	//Scan Conversion Mode enabled, cause multichannel
+	//Continuous Conversion Mode disabled, cause we trigger ADC via timer
+	//DMA Continuous Request enabled, cause we wanna use DMA to move the multi channle ADC data efficiently
+	//End of Conversion Selection, end of all conversion
+	//External Trigger Conversion Source: Timer X Trigger Out event
+	//External Trigger Conversion Edge: Rising Edge
+	//Rank and Num of Conv as wanted
+	//Enable ADC interrupt in NVIC tab, and add DMA in circular mode cause we want to automatically move the data
+
+	//Timer configurations:
+	//because we use Timer 2 Trigger Out event, we configure timer 2 clock.
+	//Timer 2 connected to APB1 bus, APB1 timer clock is 90Mhz
+	//	Timer_2_Frequency = APB1_clock/(Prescaler*ARR) = 10 Hz, T=100ms
+	//	prescaler = 9000-1, ARR = 1000-1
+	//	ADC1_sampling_rate = 10 Hz
+	//	Trigger Event Selection : Update Event -> st ADC start every time TIM2 counter resets
+
+uint16_t ADC_VAL[2];	//store the multi channel ADC reading, 16bit ADC
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+
+	//trigger blinky when voltage diffence is bigger than half of Vcc
+	//typecast into uint becasue we want absolte differnce
+	if(	(uint16_t)(ADC_VAL[0]-ADC_VAL[1]) >= 2048)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+	}
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -97,6 +137,9 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_TIM_Base_Start(&htim2);	//start timer2 as per configured
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)ADC_VAL, 2);	//start in adc in dma mode
 
   /* USER CODE END 2 */
 
